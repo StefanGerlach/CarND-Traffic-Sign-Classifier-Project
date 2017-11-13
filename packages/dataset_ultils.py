@@ -28,7 +28,21 @@ def load_translation_file(translation_file):
     return dict([(x[1][0], x[1][1]) for x in csv_file.iterrows()])
 
 
-def visualize_dataset(x, y, y_translation):
+def print_datasets_stats(x_train, x_valid, x_test, translation_file):
+    n_train = len(x_train)
+    n_valid = len(x_valid)
+    n_test = len(x_test)
+    n_classes = len(translation_file)
+
+    print("Number of Training examples = ", n_train)
+    print("Number of Validation examples = ", n_valid)
+    print("Number of Test examples = ", n_test)
+    print("Unique classes = ", n_classes)
+
+    return n_train, n_valid, n_test, n_classes
+
+
+def visualize_dataset(y, y_translation):
     # count the frequencies of classes in dataset and visualize
     hist = {}
 
