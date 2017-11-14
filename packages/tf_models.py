@@ -11,7 +11,7 @@ class TfModel(object):
         self._input_shape = input_shape
         self._num_classes = n_classes
         self._training_phase = training_phase
-        self._kernel_initializer = tf.truncated_normal_initializer(mean=0.0, stddev=0.1)
+        self._kernel_initializer = tf.truncated_normal_initializer(mean=0.0, stddev=0.2)
         self._kernel_regularizer = tf.contrib.layers.l2_regularizer(kernel_regularization)
         self._dropout_keep_prob = dropout_keep_prob
 
@@ -96,6 +96,7 @@ class TfLeNet(TfModel):
 
         # Activation.
         x = self._relu(x)
+        x = self._dropout(x, self._dropout_keep_prob)
 
         # Layer 4: Fully Connected. Input = 120. Output = 84.
         x = self._fc_layer(x, 'fc2', 84)
@@ -106,5 +107,4 @@ class TfLeNet(TfModel):
 
         # Layer 5: Fully Connected. Input = 84. Output = 10.
         logits = self._fc_layer(x, 'logits', self._num_classes)
-        probas = self._softmax(logits)
-        return probas
+        return logits

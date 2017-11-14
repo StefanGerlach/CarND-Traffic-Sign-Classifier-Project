@@ -1,5 +1,4 @@
 import sklearn.utils as skutil
-import sklearn.preprocessing as skpre
 import numpy as np
 import random as rnd
 
@@ -46,35 +45,45 @@ class BatchGenerator(object):
     """ This class implements a simple batch generator. """
     def __init__(self, batch_size, n_classes, x_list, y_list, preprocessing_fn=None, shuffle=True):
         self._x = np.array(x_list, dtype=np.float32)
-        self._y = np.array(y_list, dtype=np.float32)
+        self._y = np.array(y_list, dtype=np.int32)
+
         assert(len(self._x) == len(self._y))
-        if shuffle:
+
+        self._shuffle = shuffle
+        if self._shuffle:
             self._x, self._y = skutil.shuffle(self._x, self._y)
 
-        self._label_binarizer = skpre.LabelBinarizer()
-        self._label_binarizer.fit(y_list)
         self._preprocessing = preprocessing_fn
         self._batch_size = batch_size
         self._num_classes = n_classes
         self._index = 0
 
-    def __label_preprocessing(self, y):
-        return self._label_binarizer.transform(y)
-
     def next(self):
+        current_sta_index = self._index
         current_end_index = self._index + self._batch_size
+
         if current_end_index >= len(self._x):
             current_end_index = len(self._x) - 1
+            self._index = 0
+            if self._shuffle:
+                self._x, self._y = skutil.shuffle(self._x, self._y)
+        else:
+            self._index += self._batch_size
 
-        batch_x = self._x[self._index:current_end_index]
-        batch_y = self._y[self._index:current_end_index]
+        batch_x = self._x[current_sta_index:current_end_index]
+        batch_y = self._y[current_sta_index:current_end_index]
 
         # Do preprocessing if function is set
         if self._preprocessing is not None:
-            for i in range(len(batch_x)):
-                batch_x[i] = self._preprocessing(batch_x[i])
 
-        # Do preprocessing for label - LabelBinarizer
-        batch_y = self.__label_preprocessing(batch_y)
+            # Allocate a copy of this batch
+            batch_x_cp = np.zeros(shape=batch_x.shape, dtype=np.float32)
+
+            # Push the preprocessed images in this new container
+            for i in range(len(batch_x)):
+                batch_x_cp[i] = self._preprocessing(batch_x[i])
+
+            # Reassign
+            batch_x = batch_x_cp
 
         return batch_x, batch_y
