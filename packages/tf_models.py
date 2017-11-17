@@ -11,7 +11,8 @@ class TfModel(object):
         self._input_shape = input_shape
         self._num_classes = n_classes
         self._training_phase = training_phase
-        self._kernel_initializer = tf.truncated_normal_initializer(mean=0.0, stddev=0.2)
+        self._kernel_initializer = tf.contrib.layers.xavier_initializer()
+        # tf.truncated_normal_initializer(mean=0.0, stddev=0.2)
         self._kernel_regularizer = tf.contrib.layers.l2_regularizer(kernel_regularization)
         self._dropout_keep_prob = dropout_keep_prob
 
@@ -28,6 +29,12 @@ class TfModel(object):
         x = tf.nn.conv2d(x, w, strides=[1, strides[0], strides[1], 1], padding=padding)
         x = tf.nn.bias_add(x, tf.Variable(tf.zeros(filters)))
         return x
+
+    def _add(self, x, y):
+        return tf.add(x, y)
+
+    def _concat(self, inputs):
+        return tf.concat(inputs, axis=-1)
 
     def _fc_layer(self, x, name, neurons):
         w = tf.get_variable(name+'_weights',
@@ -56,11 +63,17 @@ class TfModel(object):
                               strides=[1, strides[0], strides[1], 1],
                               padding='SAME')
 
+    def _global_avg_pooling2d(self, x):
+        return tf.nn.avg_pool(x,
+                              ksize=[1, int(x.shape[1]), int(x.shape[2]), 1],
+                              strides=[1, int(x.shape[1]), int(x.shape[2]), 1],
+                              padding='SAME')
+
     def _dropout(self, x, keep_prob):
         return tf.nn.dropout(x, tf.constant(keep_prob, dtype=tf.float32))
 
     def _batch_norm(self, x):
-        return tf.contrib.layers.batch_normalization(x, training=bool(self._training_phase))
+        return tf.layers.batch_normalization(x, training=bool(self._training_phase))
 
     def _flatten(self, x):
         return tf.contrib.layers.flatten(x)
@@ -106,5 +119,63 @@ class TfLeNet(TfModel):
         x = self._dropout(x, self._dropout_keep_prob)
 
         # Layer 5: Fully Connected. Input = 84. Output = 10.
+        logits = self._fc_layer(x, 'logits', self._num_classes)
+        return logits
+
+
+class TfCustomSqueezeNet(TfModel):
+    # this squeeze block is inspired by
+    # SqueezeNet
+    # https://arxiv.org/abs/1602.07360
+
+    def _squeeze_expand(self, input_tensor, filters, id:str):
+        filter_1x1, filter_exp1x1, filter_exp3x3 = filters
+        # I want this to have a separate name_scope in tensorboard
+        with tf.name_scope('squeeze_expand'):
+            squeezed = self._conv2d(input_tensor, 'conv1x1_'+id, filters=filter_1x1, kernel_size=(1, 1))
+            squeezed = self._relu(squeezed)
+
+            exp_1x1 = self._conv2d(squeezed, 'conv_exp1x1'+id, filters=filter_exp1x1, kernel_size=(1, 1))
+            exp_1x1 = self._relu(exp_1x1)
+
+            exp_3x3 = self._conv2d(squeezed, 'conv_exp3x3'+id, filters=filter_exp3x3, kernel_size=(3, 3))
+            exp_3x3 = self._relu(exp_3x3)
+
+            return self._concat([exp_1x1, exp_3x3])
+
+    def construct(self, input_tensor):
+
+        # Initial Convolution
+        x = self._conv2d(input_tensor, 'sq_conv3x3_1', filters=24, kernel_size=(3, 3))
+        x = self._relu(x)
+
+        # Squeeze and Expand Blocks (aka Fire-Block)
+        x = self._squeeze_expand(x, [16, 24, 24], '1')
+
+        # Squeeze and Expand Blocks (aka Fire-Block)
+        x = self._squeeze_expand(x, [16, 24, 24], '2')
+
+        # Downscale
+        x = self._max_pooling2d(x)
+
+        # Squeeze and Expand Blocks (aka Fire-Block)
+        x = self._squeeze_expand(x, [32, 48, 48], '3')
+
+        # Squeeze and Expand Blocks (aka Fire-Block)
+        x = self._squeeze_expand(x, [32, 48, 48], '4')
+
+        # Downscale
+        x = self._max_pooling2d(x)
+
+        x = self._conv2d(x, 'sq_conv3x3_2', filters=64, kernel_size=(3, 3))
+        x = self._relu(x)
+
+        # Flatten for Fully Connected Layer
+        x = self._flatten(x)
+
+        # Fully Connected Layer
+        x = self._fc_layer(x, 'fc1', 64)
+
+        # Fully Connected Layer with Nodes_count = class_count
         logits = self._fc_layer(x, 'logits', self._num_classes)
         return logits

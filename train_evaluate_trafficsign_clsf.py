@@ -39,10 +39,11 @@ class_equalizer = train_utils.ClassEqualizer(train_x, train_y)
 eq_train_x, eq_train_y = class_equalizer.fill_up_with_copies()
 
 logdir = 'logs'
-experiment_name = 'lenet_dropout0.25'
+experiment_name = 'squeeze_softmax_xavier_drop_v12_fc'
 base_lr = 1e-3
-batch_size = 256
+batch_size = 128
 epochs = 50
+
 
 n_classes = num_class
 steps_per_epoch = int(np.ceil(len(eq_train_y) / float(batch_size)))
@@ -72,11 +73,15 @@ y = tf.placeholder(shape=[None], dtype=tf.int32)
 y_one_hot = tf.one_hot(y, num_class)
 
 # Model is our deep neural network architecture
-model_predictions = models.TfLeNet(input_shape=[None, 32, 32, 3],
-                                   n_classes=n_classes,
-                                   kernel_regularization=0.0,
-                                   dropout_keep_prob=0.75).construct(x)
+# model_predictions = models.TfLeNet(input_shape=[None, 32, 32, 3],
+#                                    n_classes=n_classes,
+#                                    kernel_regularization=0.0,
+#                                    dropout_keep_prob=0.75).construct(x)
 
+model_predictions = models.TfCustomSqueezeNet(input_shape=[None, 32, 32, 3],
+                                              n_classes=n_classes,
+                                              kernel_regularization=1e-3,
+                                              dropout_keep_prob=0.6).construct(x)
 
 # Define the loss function
 loss = cross_entropy_loss(model_predictions, y_one_hot)
@@ -129,10 +134,10 @@ with tf.Session() as sess:
             batch_x, batch_y = train_batch_generator.next()
 
             # Run a optimizer step
-            _, current_loss, current_acc = sess.run([target_op, loss, acc], feed_dict={x: batch_x, y: batch_y})
+            _, current_train_loss, current_train_acc = sess.run([target_op, loss, acc], feed_dict={x: batch_x, y: batch_y})
 
-            train_loss += current_loss
-            train_acc += current_acc
+            train_loss += current_train_loss
+            train_acc += current_train_acc
 
         # Iterate n steps for the validation now
         for j in range(steps_per_epoch_valid):
@@ -140,9 +145,9 @@ with tf.Session() as sess:
             batch_x, batch_y = valid_batch_generator.next()
 
             # Just get the loss and accuracy over this batch
-            current_loss, current_acc = sess.run([loss, acc], feed_dict={x: batch_x, y: batch_y})
+            current_val_loss, current_acc = sess.run([loss, acc], feed_dict={x: batch_x, y: batch_y})
 
-            valid_loss += current_loss
+            valid_loss += current_val_loss
             valid_acc += current_acc
 
         # Remember the history of this run
