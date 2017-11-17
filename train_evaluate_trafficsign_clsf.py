@@ -39,7 +39,7 @@ class_equalizer = train_utils.ClassEqualizer(train_x, train_y)
 eq_train_x, eq_train_y = class_equalizer.fill_up_with_copies()
 
 logdir = 'logs'
-experiment_name = 'squeeze_softmax_xavier_drop_v12_fc'
+experiment_name = 'squeeze_softmax_xavier_drop05_l2-01_v12_fc'
 base_lr = 1e-3
 batch_size = 128
 epochs = 50
@@ -72,7 +72,7 @@ x = tf.placeholder(shape=[None, 32, 32, 3], dtype=tf.float32)
 y = tf.placeholder(shape=[None], dtype=tf.int32)
 y_one_hot = tf.one_hot(y, num_class)
 
-# Model is our deep neural network architecture
+# Select the deep neural network architecture
 # model_predictions = models.TfLeNet(input_shape=[None, 32, 32, 3],
 #                                    n_classes=n_classes,
 #                                    kernel_regularization=0.0,
@@ -80,8 +80,8 @@ y_one_hot = tf.one_hot(y, num_class)
 
 model_predictions = models.TfCustomSqueezeNet(input_shape=[None, 32, 32, 3],
                                               n_classes=n_classes,
-                                              kernel_regularization=1e-3,
-                                              dropout_keep_prob=0.6).construct(x)
+                                              kernel_regularization=0.01,
+                                              dropout_keep_prob=1.0).construct(x)
 
 # Define the loss function
 loss = cross_entropy_loss(model_predictions, y_one_hot)
