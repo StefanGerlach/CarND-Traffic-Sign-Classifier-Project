@@ -20,6 +20,16 @@ def accuracy(y_pred, y):
     return tf.reduce_mean(tf.cast(equal, tf.float32))
 
 
+def evaluation(y_pred, y):
+    softmaxed = tf.nn.softmax(y_pred)
+
+    y_pred_argmax = tf.argmax(softmaxed, 1)
+    y_argmax = tf.argmax(y, 1)
+
+    equal = tf.equal(y_pred_argmax, y_argmax)
+    return [equal, softmaxed]
+
+
 def optimizer():
     return tf.train.AdamOptimizer(learning_rate=base_lr)
 
@@ -27,9 +37,11 @@ def optimizer():
 train_x, train_y, valid_x, valid_y, test_x, test_y = util.load_datasets('datasets/train.p', 'datasets/valid.p', 'datasets/test.p')
 translations = util.load_translation_file('signnames.csv')
 
-# util.visualize_dataset(train_y, translations)
-# util.visualize_dataset(valid_y, translations)
-# util.visualize_dataset(test_y, translations)
+# util.visualize_dataset_content(train_x, train_y, translations)
+# util.visualize_dataset_frequencies(train_y, translations)
+# util.visualize_dataset_frequencies(valid_y, translations)
+# util.visualize_dataset_frequencies(test_y, translations)
+
 _, _, _, num_class = util.print_datasets_stats(train_x, valid_x, test_x, translations)
 
 # Make sure that every class occurrence-probability is nearly equal
@@ -38,16 +50,19 @@ class_equalizer = train_utils.ClassEqualizer(train_x, train_y)
 # Fill images up with random samples
 eq_train_x, eq_train_y = class_equalizer.fill_up_with_copies()
 
+validation_save_worst_n_correct = 10
+
 logdir = 'logs'
 experiment_name = 'squeeze_softmax_xavier_drop05_l2-01_v12_fc'
 base_lr = 1e-3
 batch_size = 128
-epochs = 50
+batch_size_valid = 128
+epochs = 1
 
 
 n_classes = num_class
 steps_per_epoch = int(np.ceil(len(eq_train_y) / float(batch_size)))
-steps_per_epoch_valid = int(np.ceil(len(valid_y) / float(batch_size)))
+steps_per_epoch_valid = int(np.ceil(len(valid_y) / float(batch_size_valid)))
 
 # Build the BatchGenerator for training
 train_batch_generator = train_utils.BatchGenerator(batch_size=batch_size,
@@ -58,7 +73,7 @@ train_batch_generator = train_utils.BatchGenerator(batch_size=batch_size,
                                                    shuffle=True)
 
 # Build the BatchGenerator for validation
-valid_batch_generator = train_utils.BatchGenerator(batch_size=batch_size,
+valid_batch_generator = train_utils.BatchGenerator(batch_size=batch_size_valid,
                                                    n_classes=n_classes,
                                                    x_list=valid_x,
                                                    y_list=valid_y,
@@ -88,6 +103,9 @@ loss = cross_entropy_loss(model_predictions, y_one_hot)
 
 # Define the acc function
 acc = accuracy(model_predictions, y_one_hot)
+
+# Define the evaluation function
+evaluate = evaluation(model_predictions, y_one_hot)
 
 # Define the optimizer
 target_op = optimizer().minimize(loss)
@@ -173,4 +191,57 @@ with tf.Session() as sess:
         print('valid_loss: ', validation_loss_history[-1],
               ' valid_acc: ', validation_acc_history[-1])
 
+    # Now I run through the validation dataset to create a set of statistics about
+    # the trained model.
+    valid_batch_generator.reset()
+
+    # 1. Remember the n correct results with lowest probability ( n = validation_save_worst_n_correct )
+    # 2. Remember all incorrect classifications
+    worst_n_correct_predictions = {}
+    incorrect_predictions = {}
+
+    for step in range(steps_per_epoch_valid):
+        # Get the batch from training batch generator
+        # This will yield exactly 1 Sample
+        batch_x, batch_y = valid_batch_generator.next()
+
+        # Just get the loss and accuracy over this batch
+        eval_results = sess.run([evaluate], feed_dict={x: batch_x, y: batch_y})
+
+        # Iterate through the batch of results
+        for eval_hits, eval_probs in eval_results:
+            for hit_idx, eval_hit in enumerate(eval_hits):
+                hit = eval_hit
+                probabilities = eval_probs[hit_idx]
+                prob_of_correct_label = probabilities[batch_y[hit_idx]]
+
+                if not hit:
+                    incorrect_predictions.update({len(incorrect_predictions): [batch_x[hit_idx],  # image data
+                                                                               translations[batch_y[hit_idx]],  # name of class c
+                                                                               prob_of_correct_label]})   # prob of y_pred[c]
+
+                else:
+                    # If the model hit the correct class, remember the probability and update the worst_n_correct_preds
+                    max_prob_k = None
+                    max_prob = 0.0
+                    for k in worst_n_correct_predictions:
+                        if worst_n_correct_predictions[k][2] > max_prob:
+                            max_prob = worst_n_correct_predictions[k][2]
+                            max_prob_k = k
+
+                    insert_item = False
+                    if max_prob_k is None or len(worst_n_correct_predictions) < validation_save_worst_n_correct:
+                        max_prob_k = len(worst_n_correct_predictions)
+                        insert_item = True
+
+                    insert_item = insert_item or (max_prob > prob_of_correct_label)
+
+                    if insert_item:
+                        worst_n_correct_predictions.update({max_prob_k: [batch_x[hit_idx],
+                                                                         translations[batch_y[hit_idx]],
+                                                                         prob_of_correct_label]})
+
+    print('Incorrect predictions: ', str(len(incorrect_predictions)), ' / ', str(len(valid_y)))
+    util.visualize_predictions(worst_n_correct_predictions, 'Correct predictions with lowest probabilities')
+    util.visualize_predictions(incorrect_predictions, 'Incorrect predictions')
 

@@ -58,6 +58,9 @@ class BatchGenerator(object):
         self._num_classes = n_classes
         self._index = 0
 
+    def reset(self):
+        self._index = 0
+
     def next(self):
         current_sta_index = self._index
         current_end_index = self._index + self._batch_size
