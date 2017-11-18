@@ -1,6 +1,9 @@
 import sklearn.utils as skutil
 import numpy as np
 import random as rnd
+import tensorflow as tf
+import os
+from keras.preprocessing.image import ImageDataGenerator
 
 
 class ClassEqualizer(object):
@@ -41,9 +44,53 @@ class ClassEqualizer(object):
         return x_list, y_list
 
 
+class TrainSaver(object):
+    def __init__(self, directory):
+        self._dir = directory
+        self._saver = tf.train.Saver()
+        self._val_loss = None
+
+    def record(self, session, step, loss):
+        if self._val_loss is None or self._val_loss > loss:
+            print('Loss decreased from ', self._val_loss, ' to ', loss)
+            print('Saving Snapshot to ', self._dir, ' ...')
+            print(' ')
+            self._val_loss = loss
+            self._saver.save(session, os.path.join(self._dir, 'checkpt-'+str(loss)), global_step=step)
+
+
+class BasicDataAugmenter(object):
+    """
+    This class wraps the Keras imageDataGenerator for easy image-data augmentation.
+    """
+    def __init__(self,
+                 rotation_range: int=0,
+                 width_shift_range: float=0.0,
+                 height_shift_range: float=0.0,
+                 intensity_shift: float=0.0,
+                 shear_range: float=0.0,
+                 zoom_range: float=0.0):
+        self._intensity_shift = intensity_shift
+        self._gen = ImageDataGenerator(rotation_range=rotation_range,
+                                       width_shift_range=width_shift_range,
+                                       height_shift_range=height_shift_range,
+                                       shear_range=shear_range,
+                                       zoom_range=zoom_range,
+                                       fill_mode='reflect',
+                                       cval=0.0)
+
+    def process(self, x):
+
+        if self._intensity_shift != 0.0:
+            if rnd.choice([True, False, True, False]):
+                x = x * rnd.uniform(1.0 - self._intensity_shift, 1.0 + self._intensity_shift)
+                x = np.clip(x, 0.0, 255.0)
+        return self._gen.random_transform(x)
+
+
 class BatchGenerator(object):
     """ This class implements a simple batch generator. """
-    def __init__(self, batch_size, n_classes, x_list, y_list, preprocessing_fn=None, shuffle=True):
+    def __init__(self, batch_size, n_classes, x_list, y_list, augmentation_fn=None, preprocessing_fn=None, shuffle=True):
         self._x = np.array(x_list, dtype=np.float32)
         self._y = np.array(y_list, dtype=np.int32)
 
@@ -53,6 +100,7 @@ class BatchGenerator(object):
         if self._shuffle:
             self._x, self._y = skutil.shuffle(self._x, self._y)
 
+        self._augmentation_fn = augmentation_fn
         self._preprocessing = preprocessing_fn
         self._batch_size = batch_size
         self._num_classes = n_classes
@@ -76,17 +124,19 @@ class BatchGenerator(object):
         batch_x = self._x[current_sta_index:current_end_index]
         batch_y = self._y[current_sta_index:current_end_index]
 
-        # Do preprocessing if function is set
-        if self._preprocessing is not None:
+        # Allocate a copy of this batch
+        batch_x_cp = np.zeros(shape=batch_x.shape, dtype=np.float32)
 
-            # Allocate a copy of this batch
-            batch_x_cp = np.zeros(shape=batch_x.shape, dtype=np.float32)
+        # Push the preprocessed images in this new container
+        for i in range(len(batch_x)):
+            batch_x_cp[i] = batch_x[i]
 
-            # Push the preprocessed images in this new container
-            for i in range(len(batch_x)):
-                batch_x_cp[i] = self._preprocessing(batch_x[i])
+            # Do augmentation if function is set
+            if self._augmentation_fn is not None:
+                batch_x_cp[i] = self._augmentation_fn(batch_x_cp[i])
 
-            # Reassign
-            batch_x = batch_x_cp
+            # Do preprocessing if function is set
+            if self._preprocessing is not None:
+                batch_x_cp[i] = self._preprocessing(batch_x_cp[i])
 
-        return batch_x, batch_y
+        return batch_x_cp, batch_y

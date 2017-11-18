@@ -68,6 +68,7 @@ def visualize_predictions(predictions: dict, title: str):
         c_sub += 1
         if c_img % (n_cols * n_rows) == 0:
             plt.show()
+            fig.show()
 
             c_sub = 1
             fig = plt.figure()
@@ -109,8 +110,9 @@ def visualize_dataset_content(x, y, y_translation, n_samples=5):
 
         for idx in indices_mapping[y_hat]:
             # For every image, create a subplot
+            fig.suptitle(y_translation[y_hat])
             fig.add_subplot(plot_rows, plot_cols, current_image)
-            plt.title(y_translation[y_hat])
+
             img = cv2.resize(x[idx], dsize=(128, 128))
             plt.imshow(img)
             plt.axis('off')

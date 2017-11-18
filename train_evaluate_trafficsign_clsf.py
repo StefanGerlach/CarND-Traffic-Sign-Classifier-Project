@@ -1,13 +1,19 @@
 import tensorflow as tf
 import numpy as np
 import os
+import cv2
+import sklearn.utils as skutil
 import packages.dataset_ultils as util
 import packages.tf_models as models
 import packages.tf_train_utils as train_utils
 
 
-def preprocess_image(x):
-    return (x - 128.) / 128.
+def preprocess_image(img):
+    clahe = cv2.createCLAHE(clipLimit=0.3, tileGridSize=(4, 4))
+    r = clahe.apply(img.astype(np.uint8)[:, :, 0])
+    g = clahe.apply(img.astype(np.uint8)[:, :, 1])
+    b = clahe.apply(img.astype(np.uint8)[:, :, 2])
+    return (np.dstack([r, g, b]).astype(np.float32) - 128.) / 128.
 
 
 def cross_entropy_loss(y_pred, y):
@@ -37,7 +43,39 @@ def optimizer():
 train_x, train_y, valid_x, valid_y, test_x, test_y = util.load_datasets('datasets/train.p', 'datasets/valid.p', 'datasets/test.p')
 translations = util.load_translation_file('signnames.csv')
 
+
+# Test the DataAugmentation
+augmenter = train_utils.BasicDataAugmenter(rotation_range=20,
+                                           width_shift_range=0.1,
+                                           height_shift_range=0.1,
+                                           intensity_shift=0.75,
+                                           shear_range=0.2,
+                                           zoom_range=0.2)
+
+# Sample k training-samples, augment them and display the results
+k_samples = 5
+k_augmentations = 9
+augment_x, augment_y = skutil.resample(train_x, train_y, n_samples=k_samples)
+
+for k_s in range(k_samples):
+    augmentations = {}
+
+    # Push in the original
+    augmentations.update({len(augmentations): [preprocess_image(augment_x[k_s]),
+                                               translations[augment_y[k_s]],
+                                               0.0]})
+
+    for k in range(k_augmentations):
+        augmentations.update({len(augmentations): [preprocess_image(augmenter.process(augment_x[k_s])),
+                                                   translations[augment_y[k_s]],
+                                                   0.0]})
+
+    util.visualize_predictions(augmentations, 'Augmentations')
+
+
 # util.visualize_dataset_content(train_x, train_y, translations)
+
+
 # util.visualize_dataset_frequencies(train_y, translations)
 # util.visualize_dataset_frequencies(valid_y, translations)
 # util.visualize_dataset_frequencies(test_y, translations)
@@ -52,15 +90,18 @@ eq_train_x, eq_train_y = class_equalizer.fill_up_with_copies()
 
 validation_save_worst_n_correct = 10
 
-logdir = 'logs'
-experiment_name = 'squeeze_softmax_xavier_drop05_l2-01_v12_fc'
+log_basedir = 'logs'
+experiment_name = 'squeeze_augment_clahe_intens0.75'
+log_dir = os.path.join(log_basedir, experiment_name)
+
 base_lr = 1e-3
 batch_size = 128
 batch_size_valid = 128
-epochs = 1
+epochs = 50
 
 
 n_classes = num_class
+
 steps_per_epoch = int(np.ceil(len(eq_train_y) / float(batch_size)))
 steps_per_epoch_valid = int(np.ceil(len(valid_y) / float(batch_size_valid)))
 
@@ -69,6 +110,7 @@ train_batch_generator = train_utils.BatchGenerator(batch_size=batch_size,
                                                    n_classes=n_classes,
                                                    x_list=eq_train_x,
                                                    y_list=eq_train_y,
+                                                   augmentation_fn=augmenter.process,
                                                    preprocessing_fn=preprocess_image,
                                                    shuffle=True)
 
@@ -96,7 +138,7 @@ y_one_hot = tf.one_hot(y, num_class)
 model_predictions = models.TfCustomSqueezeNet(input_shape=[None, 32, 32, 3],
                                               n_classes=n_classes,
                                               kernel_regularization=0.01,
-                                              dropout_keep_prob=1.0).construct(x)
+                                              dropout_keep_prob=0.5).construct(x)
 
 # Define the loss function
 loss = cross_entropy_loss(model_predictions, y_one_hot)
@@ -117,6 +159,9 @@ train_acc_history = []
 validation_loss_history = []
 validation_acc_history = []
 
+# Build the TrainSaver
+train_saver = train_utils.TrainSaver(directory=log_dir)
+
 with tf.Session() as sess:
 
     # Create summaries for this run
@@ -132,7 +177,7 @@ with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
 
     # Initialize a Tensorboard summary Writer
-    summary_writer = tf.summary.FileWriter(logdir=os.path.join(logdir, experiment_name),
+    summary_writer = tf.summary.FileWriter(logdir=log_dir,
                                            graph=sess.graph)
 
     # Run over epochs
@@ -174,6 +219,9 @@ with tf.Session() as sess:
 
         validation_loss_history.append(valid_loss / steps_per_epoch_valid)
         validation_acc_history.append(valid_acc / steps_per_epoch_valid)
+
+        # Record this snapshot
+        train_saver.record(session=sess, step=epoch, loss=validation_loss_history[-1])
 
         # I like Tensorboard !
         feed_dict = { summary_placeholder[0]: train_loss_history[-1],

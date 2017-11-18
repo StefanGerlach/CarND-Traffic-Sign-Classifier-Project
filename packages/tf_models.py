@@ -164,6 +164,9 @@ class TfCustomSqueezeNet(TfModel):
         # Squeeze and Expand Blocks (aka Fire-Block)
         x = self._squeeze_expand(x, [32, 48, 48], '4')
 
+        # Dropout to the last Squeeze and Expand Block
+        x = self._dropout(x, self._dropout_keep_prob)
+
         # Downscale
         x = self._max_pooling2d(x)
 
@@ -173,8 +176,14 @@ class TfCustomSqueezeNet(TfModel):
         # Flatten for Fully Connected Layer
         x = self._flatten(x)
 
+        # Dropout the flattened Activation of last Conv-layer
+        x = self._dropout(x, self._dropout_keep_prob)
+
         # Fully Connected Layer
         x = self._fc_layer(x, 'fc1', 64)
+
+        # Dropout on the FC-Layer
+        x = self._dropout(x, self._dropout_keep_prob)
 
         # Fully Connected Layer with Nodes_count = class_count
         logits = self._fc_layer(x, 'logits', self._num_classes)
