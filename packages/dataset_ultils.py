@@ -41,21 +41,12 @@ def create_dataset(src_path: str, dst_filename: str):
         pickle.dump(dataset, file)
 
 
-def load_datasets(training_file, validation_file, testing_file):
-    with open(training_file, mode='rb') as f:
-        train = pickle.load(f)
+def load_dataset(file):
+    with open(file, mode='rb') as f:
+        pickle_file = pickle.load(f)
 
-    with open(validation_file, mode='rb') as f:
-        valid = pickle.load(f)
-
-    with open(testing_file, mode='rb') as f:
-        test = pickle.load(f)
-
-    X_train, y_train = train['features'], train['labels']
-    X_valid, y_valid = valid['features'], valid['labels']
-    X_test, y_test = test['features'], test['labels']
-
-    return X_train, y_train, X_valid, y_valid, X_test, y_test
+    x, y = pickle_file['features'], pickle_file['labels']
+    return [x, y]
 
 
 def load_translation_file(translation_file):
@@ -65,18 +56,14 @@ def load_translation_file(translation_file):
     return dict([(x[1][0], x[1][1]) for x in csv_file.iterrows()])
 
 
-def print_datasets_stats(x_train, x_valid, x_test, translation_file):
-    n_train = len(x_train)
-    n_valid = len(x_valid)
-    n_test = len(x_test)
-    n_classes = len(translation_file)
+def print_datasets_stats(x, y):
+    n_examples = len(x)
+    n_classes = len(np.unique(y))
 
-    print("Number of Training examples = ", n_train)
-    print("Number of Validation examples = ", n_valid)
-    print("Number of Test examples = ", n_test)
+    print("Number of examples = ", n_examples)
     print("Unique classes = ", n_classes)
 
-    return n_train, n_valid, n_test, n_classes
+    return n_examples, n_classes
 
 
 def visualize_single_prediction(img, title: str, predictions:dict):
@@ -90,24 +77,23 @@ def visualize_single_prediction(img, title: str, predictions:dict):
     """
 
     figure = plt.figure()
-    plt.title(title)
-    plt.axes('off')
+    plt.axis('off')
 
-    figure.add_subplot(211)
+    sub_plot = figure.add_subplot(121)
+    sub_plot.set_title(title)
 
-    normed = np.zeros_like(img)
-    cv2.normalize(img, normed, alpha=0.0, beta=1.0)
+    buffer = np.zeros_like(img)
+    img = cv2.normalize(img, dst=buffer, alpha=0.0, beta=1.0, norm_type=cv2.NORM_MINMAX)
+    plt.imshow(img)
 
-    plt.imshow(normed)
-
-    sub_plot = figure.add_subplot(212)
+    sub_plot = figure.add_subplot(122)
 
     sub_plot.set_title('Prediction probabilities')
     y_data = np.array([float(predictions[label]) for label in predictions])
     plt.bar(range(len(predictions)), y_data, align='center')
     x_axis = np.array([label for label in predictions])
-    plt.xticks(range(len(predictions)), x_axis, rotation='vertical')
-    plt.subplots_adjust(bottom=0.4)
+    plt.xticks(range(len(predictions)), x_axis, fontsize=8, rotation='vertical')
+    plt.subplots_adjust(bottom=0.5)
 
     plt.show()
 
@@ -131,9 +117,8 @@ def visualize_predictions(predictions: dict, title: str):
         plt.axis('off')
 
         img = cv2.resize(predictions[k][0], dsize=(256, 256))
-        normed = np.zeros_like(img)
-        cv2.normalize(img, normed, alpha=0.0, beta=1.0)
-        img = normed
+        buffer = np.zeros_like(img)
+        img = cv2.normalize(img, dst=buffer, alpha=0.0, beta=1.0, norm_type=cv2.NORM_MINMAX)
 
         plt.imshow(img)
         c_img += 1

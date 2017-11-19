@@ -7,6 +7,34 @@ import os
 from keras.preprocessing.image import ImageDataGenerator
 
 
+def cross_entropy_loss(y_pred, y):
+    cross_entropy = tf.nn.softmax_cross_entropy_with_logits(labels=y, logits=y_pred)
+    return tf.reduce_mean(cross_entropy)
+
+
+def accuracy(y_pred, y):
+    equal = tf.equal(tf.argmax(y_pred, 1), tf.argmax(y, 1))
+    return tf.reduce_mean(tf.cast(equal, tf.float32))
+
+
+def evaluation(y_pred, y):
+    softmaxed = tf.nn.softmax(y_pred)
+
+    y_pred_argmax = tf.argmax(softmaxed, 1)
+    y_argmax = tf.argmax(y, 1)
+
+    equal = tf.equal(y_pred_argmax, y_argmax)
+    return [equal, softmaxed]
+
+
+def adam_optimizer(base_lr):
+    return tf.train.AdamOptimizer(learning_rate=base_lr)
+
+
+def sgd_optimizer(base_lr, momentum):
+    return tf.train.MomentumOptimizer(learning_rate=base_lr, momentum=momentum)
+
+
 class ClassEqualizer(object):
     """ This class implements a basic class-frequency equalizer. """
     def __init__(self, x_list, y_list):
@@ -89,7 +117,12 @@ class TrainSaver(object):
     def __init__(self, directory):
         self._dir = directory
         self._saver = tf.train.Saver()
+        self._last_ckpt = None
         self._val_loss = None
+
+    @property
+    def last_checkpoint(self):
+        return self._last_ckpt
 
     def record(self, session, step, loss):
         if self._val_loss is None or self._val_loss > loss:
@@ -97,7 +130,8 @@ class TrainSaver(object):
             print('Saving Snapshot to ', self._dir, ' ...')
             print(' ')
             self._val_loss = loss
-            self._saver.save(session, os.path.join(self._dir, 'checkpt-'+str(loss)), global_step=step)
+            self._last_ckpt = os.path.join(self._dir, 'checkpt-'+str(loss)+'-'+str(step))
+            self._saver.save(session, self._last_ckpt)
 
 
 class BasicDataAugmenter(object):

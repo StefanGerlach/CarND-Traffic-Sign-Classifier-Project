@@ -5,7 +5,7 @@ class TfModel(object):
     def __init__(self, input_shape,
                  n_classes,
                  training_phase: int = 1,
-                 dropout_keep_prob=0.75,
+                 dropout_training_value=0.75,
                  kernel_regularization=1e-9):
 
         self._input_shape = input_shape
@@ -14,7 +14,9 @@ class TfModel(object):
         self._kernel_initializer = tf.contrib.layers.xavier_initializer()
         # tf.truncated_normal_initializer(mean=0.0, stddev=0.2)
         self._kernel_regularizer = tf.contrib.layers.l2_regularizer(kernel_regularization)
-        self._dropout_keep_prob = dropout_keep_prob
+
+        self.dropout_keep_prob_placeholder = tf.placeholder(tf.float32)
+        self.dropout_training_value = dropout_training_value
 
     def _conv2d(self, x, name, filters, kernel_size, padding='SAME', strides=(1, 1)):
         w = tf.get_variable(name+'_weights',
@@ -69,8 +71,8 @@ class TfModel(object):
                               strides=[1, int(x.shape[1]), int(x.shape[2]), 1],
                               padding='SAME')
 
-    def _dropout(self, x, keep_prob):
-        return tf.nn.dropout(x, tf.constant(keep_prob, dtype=tf.float32))
+    def _dropout(self, x):
+        return tf.nn.dropout(x, self.dropout_keep_prob_placeholder)
 
     def _batch_norm(self, x):
         return tf.layers.batch_normalization(x, training=bool(self._training_phase))
@@ -109,14 +111,14 @@ class TfLeNet(TfModel):
 
         # Activation.
         x = self._relu(x)
-        x = self._dropout(x, self._dropout_keep_prob)
+        x = self._dropout(x)
 
         # Layer 4: Fully Connected. Input = 120. Output = 84.
         x = self._fc_layer(x, 'fc2', 84)
 
         # Activation + Dropout.
         x = self._relu(x)
-        x = self._dropout(x, self._dropout_keep_prob)
+        x = self._dropout(x)
 
         # Layer 5: Fully Connected. Input = 84. Output = 10.
         logits = self._fc_layer(x, 'logits', self._num_classes)
@@ -165,7 +167,7 @@ class TfCustomSqueezeNet(TfModel):
         x = self._squeeze_expand(x, [32, 48, 48], '4')
 
         # Dropout to the last Squeeze and Expand Block
-        x = self._dropout(x, self._dropout_keep_prob)
+        x = self._dropout(x)
 
         # Downscale
         x = self._max_pooling2d(x)
@@ -177,13 +179,13 @@ class TfCustomSqueezeNet(TfModel):
         x = self._flatten(x)
 
         # Dropout the flattened Activation of last Conv-layer
-        x = self._dropout(x, self._dropout_keep_prob)
+        x = self._dropout(x)
 
         # Fully Connected Layer
         x = self._fc_layer(x, 'fc1', 64)
 
         # Dropout on the FC-Layer
-        x = self._dropout(x, self._dropout_keep_prob)
+        x = self._dropout(x)
 
         # Fully Connected Layer with Nodes_count = class_count
         logits = self._fc_layer(x, 'logits', self._num_classes)
