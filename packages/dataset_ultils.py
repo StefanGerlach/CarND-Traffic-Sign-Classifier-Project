@@ -94,7 +94,11 @@ def visualize_single_prediction(img, title: str, predictions:dict):
     plt.axes('off')
 
     figure.add_subplot(211)
-    plt.imshow(img)
+
+    normed = np.zeros_like(img)
+    cv2.normalize(img, normed, alpha=0.0, beta=1.0)
+
+    plt.imshow(normed)
 
     sub_plot = figure.add_subplot(212)
 
@@ -126,7 +130,11 @@ def visualize_predictions(predictions: dict, title: str):
         fig.add_subplot(n_rows, n_cols, c_sub)
         plt.axis('off')
 
-        img = cv2.resize((predictions[k][0] + 1.0) / 2.0, dsize=(256, 256))
+        img = cv2.resize(predictions[k][0], dsize=(256, 256))
+        normed = np.zeros_like(img)
+        cv2.normalize(img, normed, alpha=0.0, beta=1.0)
+        img = normed
+
         plt.imshow(img)
         c_img += 1
         c_sub += 1
@@ -210,6 +218,3 @@ def visualize_dataset_frequencies(y, y_translation):
     plt.subplots_adjust(bottom=0.4)
     plt.show()
 
-
-def visualize_wrong_classifications(x, y_gt, y_pred, y_translations):
-    pass
