@@ -130,7 +130,7 @@ class TfCustomSqueezeNet(TfModel):
     # SqueezeNet
     # https://arxiv.org/abs/1602.07360
 
-    def _squeeze_expand(self, input_tensor, filters, id:str):
+    def _squeeze_expand(self, input_tensor, filters, id: str):
         filter_1x1, filter_exp1x1, filter_exp3x3 = filters
         # I want this to have a separate name_scope in tensorboard
         with tf.name_scope('squeeze_expand'):

@@ -94,8 +94,8 @@ def visualize_single_prediction(img, title: str, predictions:dict):
     x_axis = np.array([label for label in predictions])
     plt.xticks(range(len(predictions)), x_axis, fontsize=8, rotation='vertical')
     plt.subplots_adjust(bottom=0.5)
-
     plt.show()
+    plt.subplots_adjust(bottom=0.1)
 
 
 def visualize_predictions(predictions: dict, title: str):
@@ -125,12 +125,12 @@ def visualize_predictions(predictions: dict, title: str):
         c_sub += 1
         if c_img % (n_cols * n_rows) == 0:
             plt.show()
-            fig.show()
-
             c_sub = 1
             fig = plt.figure()
             plt.title(title)
             plt.axis('off')
+
+    plt.show()
 
 
 def visualize_dataset_content(x, y, y_translation, n_samples=5):

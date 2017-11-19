@@ -77,7 +77,7 @@ class ModelTrainer(object):
     def __init_dataset_equalizer(self):
         # Initialize the class, responsible for class frequencies
         self.class_equalizer = train_utils.ClassEqualizer(self._training_set[0],
-                                                          self._training_set[0])
+                                                          self._training_set[1])
 
     def __init_image_preprocessor(self):
         assert self._training_set
@@ -485,6 +485,34 @@ trainer.set_augmentation_function((lambda x: trainer.image_augmenter.process(x))
 # Set the parameter of this training process.
 trainer.set_training_parameter(learning_rate=1e-3, batch_size=128, epochs=50, optimizer='adam')
 
+# Print out some information about the datasets
+print('Training set statistics:')
+trainer.print_dataset_statistics(dataset_name='train')
+
+print('Validation set statistics:')
+trainer.print_dataset_statistics(dataset_name='val')
+
+# Print frequencies
+print('Visualization of training class frequencies:')
+trainer.visualize_dataset_frequencies(dataset_name='train')
+
+# Print frequencies after equalisation
+trainer.equalize_traindata_class_frequencies()
+print('Visualization of training class frequencies after equalisation:')
+trainer.visualize_dataset_frequencies(dataset_name='train')
+
+# Print frequencies
+print('Visualization of validation class frequencies:')
+trainer.visualize_dataset_frequencies(dataset_name='val')
+
+# Visualize some images
+print('Visualization of some images of all classes:')
+trainer.visualize_dataset_images(dataset_name='train')
+
+# Visualize Augmentation
+print('Visualization image augmentation:')
+trainer.visualize_image_augmentation()
+
 # Get the shape of the training images
 input_shape = trainer.get_image_shape()
 
@@ -529,7 +557,7 @@ trainer.set_preprocessing_function((lambda x: trainer.image_preprocessor.normali
 trainer.set_augmentation_function((lambda x: trainer.image_augmenter.process(x)))
 
 # Set the parameter of this training process.
-trainer.set_training_parameter(learning_rate=1e-3, batch_size=128, epochs=50, optimizer='adam')
+trainer.set_training_parameter(learning_rate=1e-3, batch_size=128, epochs=2, optimizer='adam')
 
 # Get the shape of the training images
 input_shape = trainer.get_image_shape()
@@ -572,7 +600,7 @@ trainer.set_preprocessing_function((lambda x: trainer.image_preprocessor.normali
 trainer.set_augmentation_function((lambda x: trainer.image_augmenter.process(x)))
 
 # Set the parameter of this training process.
-trainer.set_training_parameter(learning_rate=1e-3, batch_size=128, epochs=5, optimizer='adam')
+trainer.set_training_parameter(learning_rate=1e-3, batch_size=128, epochs=50, optimizer='adam')
 
 # Get the shape of the training images
 input_shape = trainer.get_image_shape()
