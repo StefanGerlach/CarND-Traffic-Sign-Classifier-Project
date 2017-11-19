@@ -557,7 +557,7 @@ trainer.set_preprocessing_function((lambda x: trainer.image_preprocessor.normali
 trainer.set_augmentation_function((lambda x: trainer.image_augmenter.process(x)))
 
 # Set the parameter of this training process.
-trainer.set_training_parameter(learning_rate=1e-3, batch_size=128, epochs=2, optimizer='adam')
+trainer.set_training_parameter(learning_rate=1e-3, batch_size=128, epochs=50, optimizer='adam')
 
 # Get the shape of the training images
 input_shape = trainer.get_image_shape()

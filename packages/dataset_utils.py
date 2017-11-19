@@ -77,7 +77,7 @@ def visualize_single_prediction(img, title: str, predictions:dict):
     """
 
     figure = plt.figure()
-    figure.tight_layout()
+
     plt.axis('off')
 
     sub_plot = figure.add_subplot(121)
@@ -104,7 +104,6 @@ def visualize_predictions(predictions: dict, title: str):
     This function will plot the predictions in the predictions-dict
     """
     fig = plt.figure()
-    fig.tight_layout()
 
     plt.title(title)
     plt.axis('off')
@@ -162,7 +161,6 @@ def visualize_dataset_content(x, y, y_translation, n_samples=5):
     for y_hat in indices_mapping:
         # Visualize in a plot
         fig = plt.figure()
-        fig.tight_layout()
 
         plot_rows = 1
         plot_cols = n_samples
@@ -199,7 +197,6 @@ def visualize_dataset_frequencies(y, y_translation):
 
     # visualize as histogram
     fig = plt.figure(figsize=(16, 12))
-    fig.tight_layout()
     sub = fig.add_subplot(1, 1, 1)
     sub.set_title('Histogram of classes')
     y_data = np.array([float(hist[k]) for k in hist])
