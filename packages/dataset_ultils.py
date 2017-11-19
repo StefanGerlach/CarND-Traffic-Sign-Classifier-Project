@@ -3,7 +3,42 @@ import pandas
 import matplotlib.pyplot as plt
 import numpy as np
 import random as rnd
+import glob
 import cv2
+import os
+
+
+def create_dataset(src_path: str, dst_filename: str):
+    """
+    This function will iterate over a directory to create a pickle dataset-file
+    The label is read from the filename with a specific convention!
+
+    filename = my_file_name_<label>.extension
+
+    The label is read between the last '_' and the '.' of the file-extension.
+    """
+
+    filenames = glob.glob(os.path.join(src_path, '*'))
+    if len(filenames) <= 0:
+        raise Exception('No files found in directory ' + str(src_path))
+
+    dataset = {'features': [],
+               'labels': []}
+
+    for filename in filenames:
+        try:
+            img = cv2.imread(filename)
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+            label = int(filename.split('_')[-1].split('.')[0])
+
+            dataset['features'].append(img)
+            dataset['labels'].append(label)
+        except:
+            print('Could not load file ', filename)
+
+    with open(dst_filename, 'wb') as file:
+        pickle.dump(dataset, file)
 
 
 def load_datasets(training_file, validation_file, testing_file):
@@ -42,6 +77,35 @@ def print_datasets_stats(x_train, x_valid, x_test, translation_file):
     print("Unique classes = ", n_classes)
 
     return n_train, n_valid, n_test, n_classes
+
+
+def visualize_single_prediction(img, title: str, predictions:dict):
+    """
+    This function is going to plot a single prediction in detail.
+    It expects a 3D Tensor for image data, a string-title and a
+    dictionary with keys as label-names with probabilities as values.
+
+    E.g. predictions = {'no passing': 0.5277,
+                        'stop': 0.012, ...}
+    """
+
+    figure = plt.figure()
+    plt.title(title)
+    plt.axes('off')
+
+    figure.add_subplot(211)
+    plt.imshow(img)
+
+    sub_plot = figure.add_subplot(212)
+
+    sub_plot.set_title('Prediction probabilities')
+    y_data = np.array([float(predictions[label]) for label in predictions])
+    plt.bar(range(len(predictions)), y_data, align='center')
+    x_axis = np.array([label for label in predictions])
+    plt.xticks(range(len(predictions)), x_axis, rotation='vertical')
+    plt.subplots_adjust(bottom=0.4)
+
+    plt.show()
 
 
 def visualize_predictions(predictions: dict, title: str):

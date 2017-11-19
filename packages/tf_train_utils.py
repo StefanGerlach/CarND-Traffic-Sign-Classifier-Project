@@ -2,6 +2,7 @@ import sklearn.utils as skutil
 import numpy as np
 import random as rnd
 import tensorflow as tf
+import cv2
 import os
 from keras.preprocessing.image import ImageDataGenerator
 
@@ -42,6 +43,46 @@ class ClassEqualizer(object):
                 y_list.append(k)
 
         return x_list, y_list
+
+
+class ImagePreprocessor(object):
+    """
+    This class wraps some methods for image preprocessing and normalization.
+    """
+
+    def __init__(self, train_images=None):
+        """
+        If train_images is filled with the array of training images, then internally
+        the mean-image and stddev-image are calculated. The function clear_mean_stddev() is going to work ! :)
+
+        :param train_images: An array of n training images with shape like [n, 32, 32, 3]
+        """
+        self._mean_image = None
+        self._stddev_image = None
+
+        if train_images is not None:
+            self._mean_image = np.mean(train_images, axis=0)
+            self._stddev_image = np.std(train_images, axis=0)
+
+    def clear_mean_stddev(self, x):
+        if self._mean_image is None or self._stddev_image is None:
+            raise Exception('No mean image or stddev image available.')
+
+        x = x - self._mean_image
+        x = x / self._stddev_image
+        return x
+
+    @staticmethod
+    def normalize_center(x):
+        return (x - 128.) / 128.
+
+    @staticmethod
+    def apply_clahe(x):
+        clahe = cv2.createCLAHE(clipLimit=0.3, tileGridSize=(4, 4))
+        r = clahe.apply(x.astype(np.uint8)[:, :, 0])
+        g = clahe.apply(x.astype(np.uint8)[:, :, 1])
+        b = clahe.apply(x.astype(np.uint8)[:, :, 2])
+        return np.dstack([r, g, b]).astype(np.float32)
 
 
 class TrainSaver(object):

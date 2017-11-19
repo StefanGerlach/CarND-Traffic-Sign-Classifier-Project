@@ -1,19 +1,14 @@
 import tensorflow as tf
 import numpy as np
 import os
-import cv2
+
 import sklearn.utils as skutil
 import packages.dataset_ultils as util
 import packages.tf_models as models
 import packages.tf_train_utils as train_utils
 
 
-def preprocess_image(img):
-    clahe = cv2.createCLAHE(clipLimit=0.3, tileGridSize=(4, 4))
-    r = clahe.apply(img.astype(np.uint8)[:, :, 0])
-    g = clahe.apply(img.astype(np.uint8)[:, :, 1])
-    b = clahe.apply(img.astype(np.uint8)[:, :, 2])
-    return (np.dstack([r, g, b]).astype(np.float32) - 128.) / 128.
+# util.create_dataset('images/custom_signs', 'custom_test.p')
 
 
 def cross_entropy_loss(y_pred, y):
@@ -42,6 +37,14 @@ def optimizer():
 
 train_x, train_y, valid_x, valid_y, test_x, test_y = util.load_datasets('datasets/train.p', 'datasets/valid.p', 'datasets/test.p')
 translations = util.load_translation_file('signnames.csv')
+
+# Build the ImagePreprocessor
+preprocessor = train_utils.ImagePreprocessor(train_images=train_x)
+
+
+# Declare the image preprocessing function
+def preprocess_image(img):
+    return preprocessor.clear_mean_stddev(img)
 
 
 # Test the DataAugmentation
@@ -91,7 +94,7 @@ eq_train_x, eq_train_y = class_equalizer.fill_up_with_copies()
 validation_save_worst_n_correct = 10
 
 log_basedir = 'logs'
-experiment_name = 'squeeze_augment_clahe_intens0.75'
+experiment_name = 'squeeze_meanstddev_augment_intens0.75'
 log_dir = os.path.join(log_basedir, experiment_name)
 
 base_lr = 1e-3
