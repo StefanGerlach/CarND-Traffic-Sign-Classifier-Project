@@ -76,7 +76,7 @@ def visualize_single_prediction(img, title: str, predictions:dict):
                         'stop': 0.012, ...}
     """
 
-    figure = plt.figure()
+    figure = plt.figure(figsize=(16, 6))
 
     plt.axis('off')
 
@@ -103,7 +103,7 @@ def visualize_predictions(predictions: dict, title: str):
     """
     This function will plot the predictions in the predictions-dict
     """
-    fig = plt.figure()
+    fig = plt.figure(figsize=(16, 12))
 
     plt.title(title)
     plt.axis('off')
@@ -128,14 +128,14 @@ def visualize_predictions(predictions: dict, title: str):
         if c_img % (n_cols * n_rows) == 0:
             plt.show()
             c_sub = 1
-            fig = plt.figure()
+            fig = plt.figure(figsize=(16, 12))
             plt.title(title)
             plt.axis('off')
 
     plt.show()
 
 
-def visualize_dataset_content(x, y, y_translation, n_samples=5):
+def visualize_dataset_content(x, y, y_translation, n_samples=5, n_classes=5):
     """
     This function will plot n_samples in a random order of every class.
     :param n_samples: how many samples to plot per class
@@ -158,9 +158,9 @@ def visualize_dataset_content(x, y, y_translation, n_samples=5):
             how_many = len(indices_mapping[y_hat])
         indices_mapping[y_hat] = rnd.sample(indices_mapping[y_hat], how_many)
 
-    for y_hat in indices_mapping:
+    for n, y_hat in enumerate(indices_mapping):
         # Visualize in a plot
-        fig = plt.figure()
+        fig = plt.figure(figsize=(16, 6))
 
         plot_rows = 1
         plot_cols = n_samples
@@ -179,6 +179,10 @@ def visualize_dataset_content(x, y, y_translation, n_samples=5):
             current_image += 1
 
         plt.show()
+
+        if n >= n_classes:
+            break
+
     return
 
 

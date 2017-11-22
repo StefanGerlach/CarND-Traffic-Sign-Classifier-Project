@@ -412,7 +412,8 @@ class ModelTrainer(object):
                                               self._class_translations[batch_y[hit_idx]],
                                               prob_of_correct_label]})
 
-        print('Incorrect predictions: ', str(len(incorrect_predictions)), ' / ', str(len(self._validation_set[0])))
+        print('Evaluation accuracy : ', str((1.0-(len(incorrect_predictions)  / len(self._validation_set[0])))* 100.0), ' %')
+
         util.visualize_predictions(worst_n_correct_predictions, 'Correct predictions with lowest probabilities')
         util.visualize_predictions(incorrect_predictions, 'Incorrect predictions')
 
@@ -423,7 +424,7 @@ class ModelTrainer(object):
         dataset = self._training_set if dataset_name == 'train' else self._validation_set
         util.print_datasets_stats(dataset[0], dataset[1])
 
-    def visualize_dataset_images(self, dataset_name: str='train', samples_per_class: int=5):
+    def visualize_dataset_images(self, dataset_name: str='train', samples_per_class: int=5, max_classes: int=5):
         if dataset_name not in ['train', 'val']:
             raise Exception('Unrecognized dataset name! Try train or val.')
 
@@ -432,7 +433,8 @@ class ModelTrainer(object):
         util.visualize_dataset_content(dataset[0],
                                        dataset[1],
                                        self._class_translations,
-                                       n_samples=samples_per_class)
+                                       n_samples=samples_per_class,
+                                       n_classes=max_classes)
 
     def visualize_dataset_frequencies(self, dataset_name: str='train'):
         if dataset_name not in ['train', 'val']:
@@ -506,7 +508,7 @@ print('Visualization of validation class frequencies:')
 trainer.visualize_dataset_frequencies(dataset_name='val')
 
 # Visualize some images
-print('Visualization of some images of all classes:')
+print('Visualization of some images of some classes:')
 trainer.visualize_dataset_images(dataset_name='train')
 
 # Visualize Augmentation
@@ -531,13 +533,19 @@ custom_squeezenet = models.TfCustomSqueezeNet(input_shape=[None,
 trainer.set_model(custom_squeezenet)
 
 # Fit the model with the specified optimizer to the training set
-trainer.fit(experiment_name='final_experiment')
+# trainer.fit(experiment_name='final_experiment')
 
 # Evaluate on the validation set
-trainer.evaluation_run(display_most_unsure=10, detailed_view=False)
+# trainer.evaluation_run(display_most_unsure=10, detailed_view=False)
 
 # Get the last (best) Checkpoint filename
-last_checkpoint = trainer.get_last_checkpoint_filename()
+#last_checkpoint = trainer.get_last_checkpoint_filename()
+
+last_checkpoint = 'logs/final_experiment/checkpt-0.0139639638592-39'
+
+
+# Clear the Session Graph
+tf.reset_default_graph()
 
 
 # Load a model and evaluate the test-set
@@ -582,6 +590,9 @@ trainer.load_weights(last_checkpoint)
 # Evaluate on the validation set
 trainer.evaluation_run(display_most_unsure=10, detailed_view=False)
 
+# Clear the Session Graph
+tf.reset_default_graph()
+
 
 # Load a model and evaluate the custom test-set
 # ---------------------------------------------------------------------------------------------------------
@@ -625,4 +636,6 @@ trainer.load_weights(last_checkpoint)
 # Evaluate on the validation set
 trainer.evaluation_run(display_most_unsure=10, detailed_view=True)
 
+# Clear the Session Graph
+tf.reset_default_graph()
 
