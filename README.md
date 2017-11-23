@@ -106,7 +106,7 @@ To compensate the copies of the images in the training set and to give the datas
  * Intensity shift 
  * Image Shearing
 
-To visualize, how aggressive the augmentation is, I use a visualization function:
+To visualize, how aggressive the augmentation is, I use a visualization function where the most left image is the original and all other images are slight variations of it:
 
 ![augment_1](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/augmentation_0.PNG "Testing image augmentation")
 ![augment_2](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/augmentation_1.PNG "Testing image augmentation")
@@ -134,3 +134,19 @@ But before doing this, to put it all together I created a ModelTrainer class. He
   * The class that normalizes the class occurences
   * The class that can preprocess images
   * The class that is able to augment images
+  * The batch generator
+  * The training optimizer
+  * All training hyperparameters
+  * The deep learning model 
+  * The tensorflow session and graph operations
+  * The model saver
+  
+After instantiation of the ModelTrainer with the directories of the datasets (train, validation), the class translations and the log directory there are just the following functions to call:
+
+  * set_preprocessing_function()
+  * set_augmentation_function()
+  * set_training_parameter()
+  * set_model()
+  * fit()
+  * evaluation_run()
+
