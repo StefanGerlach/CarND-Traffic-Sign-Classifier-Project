@@ -11,7 +11,8 @@ In this writeup I want to explain my approach of a traffic sign classifier based
   * Dataset Visualization
   * Image Preprocessing
   * Class distribution normalization
-  * Image batching to feed them into the classifier during training
+  * Image Batching to feed them into the classifier during training
+  * Image Augmentation
   
 ### Part 2
 #### Then I summarize what deep learning architecture I chose and how I monitored training and validation:
@@ -85,6 +86,15 @@ What I additionally did was analyzing the distribution of class-occurences. I pl
 To avoid bias in the classifier, I normalize the frequencies by random sampling images of a specific class and copying them into the set until I reach an equal count of images for each class. After that operation the histogram looks like this:
 ![hist_train_equal](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/hist_testdata_equalized.png "histogram of normalized class occurences in trainset")
 
+I dont worry about multiples images in a class because I am going to
+  * Random sample a batch from the training-set
+  * Apply data augmentation
 
 
+#### Image batching to feed them into the classifier during training
+---
+For the training process of the deep neural network I want to randomly select a batch of images at each training step. For this purpose I created a BatchGenerator that does the job. The batch generator additionally has the image preprocessing and image augmentation function that is going to be applied on each batch before it is fed to the network. The complete trainingset is shuffled at the start of a new epoch.
 
+#### Image Augmentation
+---
+To compensate the copies of the images in the training set and to give the dataset more variation for better network generalization and less overfitting, I apply image augmentation.
