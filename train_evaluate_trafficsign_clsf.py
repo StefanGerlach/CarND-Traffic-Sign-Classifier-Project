@@ -567,9 +567,6 @@ trainer.set_augmentation_function((lambda x: trainer.image_augmenter.process(x))
 # Set the parameter of this training process.
 trainer.set_training_parameter(learning_rate=1e-3, batch_size=128, epochs=50, optimizer='adam')
 
-
-trainer.print_dataset_statistics('val')
-
 # Get the shape of the training images
 input_shape = trainer.get_image_shape()
 
