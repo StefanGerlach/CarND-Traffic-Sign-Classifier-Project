@@ -103,7 +103,7 @@ def visualize_predictions(predictions: dict, title: str):
     """
     This function will plot the predictions in the predictions-dict
     """
-    fig = plt.figure(figsize=(16, 12))
+    fig = plt.figure(figsize=(16, 6))
 
     plt.title(title)
     plt.axis('off')
@@ -128,7 +128,7 @@ def visualize_predictions(predictions: dict, title: str):
         if c_img % (n_cols * n_rows) == 0:
             plt.show()
             c_sub = 1
-            fig = plt.figure(figsize=(16, 12))
+            fig = plt.figure(figsize=(16, 6))
             plt.title(title)
             plt.axis('off')
 
