@@ -118,9 +118,11 @@ To visualize, how aggressive the augmentation is, I use a visualization function
 ---
 To monitor the training process I use tensorboard, which comes with the tensorflow-package. This extremely handy tool displays all information I need for this small project in the browser. To create statistics for tensorboard, a summary writer is instantiated and gets a scalar summary operation for the training loss, training accuracy, validation loss and validation accuracy. The Tensowflow-Graph is automatically shown in tensorboard!
 
-For saving my checkpoints I encapsulated the tensorflow.train.saver in my TrainSaver class. This class saves a new checkpoint if the validation loss decreases with the naming convention <logdir>checkpt-<val_loss>-<epoch>.
+For saving my checkpoints I encapsulated the tensorflow.train.saver in my TrainSaver class. This class saves a new checkpoint if the validation loss decreases with the naming convention < logdir >checkpt-< val_loss >-< epoch >.
  
- 
+![tensorboard_0](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/tensorboard_summaries.png "Tensorboard")
+
+
 #### Testing LeNet as a baseline
 ---
 
@@ -149,4 +151,79 @@ After instantiation of the ModelTrainer with the directories of the datasets (tr
   * set_model()
   * fit()
   * evaluation_run()
+
+
+When all of these functions have executed, I take a look into Tensorboard and reflect how well the model was trained during this process. Most of the time I used these hyperparameters and settings:
+
+| Parameter | Value |
+| :-----: | :---------------: |
+| Base Learning Rate | 1e-3 |
+| Optimizer | Adam (RMS with momentum) |
+| Batch Size | 128 |
+| Epochs | 50 |
+| Kernel Regularization | 1e-2 |
+| Dropout (chance to drop) | 0.25 - 0.5 |
+| Loss Function | softmax cross entropy with logits |
+
+
+#### Tweaking LeNet
+---
+
+The first results did look like in the next screenshot of Tensorboard. The baseline model (in blue) performed quite well - I readhed a validation accuracy of about 92,3 %. But when I had a look over the validation loss, there was a slight tendency of increasement / overfitting to the dataset. So I introduced a dropout of 0.25 (chance to drop) and observed, that the val_loss decreased even more and the val_acc reached 93,3 %!
+
+![tensorboard_1](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/lenet_baseline_tb.png "Tensorboard")
+
+
+#### Using a custom model inspired by [SqueezeNet](https://arxiv.org/abs/1602.07360)
+---
+
+For the next step I wanted to implement a new architecture that has some interesting layer architectures and is not as big as for example Inception V3, ResNet or VGGx. I like the idea to have a great performance with less parameter and this is where SqueezeNet shines. So I decided to implement the FireModules from the SqueezeNet Paper and put them into a smaller network. 
+
+So my custom architecture can be described like
+
+##### SqueezeBlock:
+
+| Layer | Description |
+| :-----: | :---------------: |
+| 1 | input -> conv2d 1x1 relu activation |
+| 2 | 1 -> conv2d 1x1 relu activation |
+| 3 | 1 -> conv2d 3x3 relu activation |
+| 4 | 2, 3 -> concatenation |
+
+##### Custom SqueezeNet-inspired Network
+
+| Layer | Description | Output Shape (Batch x Height x Width x Channels) |
+| :---: | :---------: | :----------: |
+| 0 | input | 128 x 32 x 32 x 3 |
+| 1 | input -> conv2d 3x3 relu activation | 128 x 32 x 32 x 24 | 
+| 2 | 1 -> maxpool 2x2 | 128 x 16 x 16 x 24 |
+| 3 | 2 -> squeezeblock | 128 x 16 x 16 x 48 |
+| 4 | 3 -> maxpool 2x2 | 128 x 8 x 8 x 48 |
+| 5 | 4 -> squeezeblock | 128 x 8 x 8 x 96 |
+| 6 | 5 -> squeezeblock | 128 x 8 x 8 x 96 |
+| 7 | 6 -> dropout |  128 x 8 x 8 x 96 |
+| 8 | 7 -> maxpool 2x2 | 128 x 4 x 4 x 96 |
+| 9 | 8 -> conv2d 3x3 relu activation | 128 x 4 x 4 x 64 |
+| 10 | 9 -> flatten | 128 x 1024 |
+| 11 | 10 -> dropout | 128 x 1024 |
+| 12 | 11 -> fc 64 neurons | 128 x 64 |
+| 13 | 12 -> dropout | 128 x 64 |
+| 14 | 13 -> fc 43 neurons (num classes) | 128 x 43 |
+
+
+My first experiments dramatically failed with my custom SqueezeNet. And this is where I discovered the real importance of weight initialization! I switched to Xavier initialization and the network converged.
+
+[Understanding the difficulty of training deep feedforward neural networks, Xavier Glorot, Yoshua Bengio](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.207.2059&rep=rep1&type=pdf)
+
+The following Tensorboard shows:
+
+| Curve color | Experiment Description |
+| :----- | :--------------- |
+| Blue | LeNet Baseline |
+| Red | tweaked LeNet |
+| Light Blue | The first version of custom SqueezeNet with Dropout at 0.5 |
+| Green | The final experiment with custom SqueezeNet, Dropout 0.5 and Image Augmentation |
+
+![tensorboard_2](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/lenet_squeeze_tb.png "Tensorboard SqueezeNet")
+
 
