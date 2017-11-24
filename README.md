@@ -95,6 +95,58 @@ I dont worry about multiples images in a class because I am going to
 ---
 For the training process of the deep neural network I want to randomly select a batch of images at each training step. For this purpose I created a BatchGenerator that does the job. The batch generator additionally has the image preprocessing and image augmentation function that is going to be applied on each batch before it is fed to the network. The complete trainingset is shuffled at the start of a new epoch.
 
+
 #### Image Augmentation
 ---
-To compensate the copies of the images in the training set and to give the dataset more variation for better network generalization and less overfitting, I apply image augmentation.
+To compensate the copies of the images in the training set and to give the dataset more variation for better network generalization and less overfitting, I apply image augmentation. To do this, I use the keras ImageGenerator to apply 
+
+ * Image rotation in a range of -20 to +20 degrees
+ * Image translation in a range of -10 to +10 %
+ * Image Zooming in range of -20 to +20 %
+ * Intensity shift 
+ * Image Shearing
+
+To visualize, how aggressive the augmentation is, I use a visualization function where the most left image is the original and all other images are slight variations of it:
+
+![augment_1](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/augmentation_0.PNG "Testing image augmentation")
+![augment_2](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/augmentation_1.PNG "Testing image augmentation")
+
+
+
+## Part 2
+#### Tensorboard for monitoring
+---
+To monitor the training process I use tensorboard, which comes with the tensorflow-package. This extremely handy tool displays all information I need for this small project in the browser. To create statistics for tensorboard, a summary writer is instantiated and gets a scalar summary operation for the training loss, training accuracy, validation loss and validation accuracy. The Tensowflow-Graph is automatically shown in tensorboard!
+
+For saving my checkpoints I encapsulated the tensorflow.train.saver in my TrainSaver class. This class saves a new checkpoint if the validation loss decreases with the naming convention <logdir>checkpt-<val_loss>-<epoch>.
+ 
+ 
+#### Testing LeNet as a baseline
+---
+
+**TFModel** is the class I created to have an easy interface for creating new deep learning model architectures. Here I wrote some functions that wrap tensorflow functions like conv2d, fc_layer or dropout. My wrapper functions feel like a bit like Keras, that inspired me in doing this. 
+
+I took the LeNet architecture from the Udacity lab as a baseline.
+
+But before doing this, to put it all together I created a ModelTrainer class. Here all code comes together. The ModelTrainer has information about 
+  * Log directory
+  * Paths to datasets and the class translations
+  * The class that normalizes the class occurences
+  * The class that can preprocess images
+  * The class that is able to augment images
+  * The batch generator
+  * The training optimizer
+  * All training hyperparameters
+  * The deep learning model 
+  * The tensorflow session and graph operations
+  * The model saver
+  
+After instantiation of the ModelTrainer with the directories of the datasets (train, validation), the class translations and the log directory there are just the following functions to call:
+
+  * set_preprocessing_function()
+  * set_augmentation_function()
+  * set_training_parameter()
+  * set_model()
+  * fit()
+  * evaluation_run()
+
