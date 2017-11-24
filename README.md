@@ -215,7 +215,9 @@ My first experiments dramatically failed with my custom SqueezeNet. And this is 
 
 [Understanding the difficulty of training deep feedforward neural networks, Xavier Glorot, Yoshua Bengio](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.207.2059&rep=rep1&type=pdf)
 
-The following Tensorboard shows:
+
+##### Experiments
+---
 
 | Curve color | Experiment Description |
 | :----- | :--------------- |
@@ -224,6 +226,36 @@ The following Tensorboard shows:
 | Light Blue | The first version of custom SqueezeNet with Dropout at 0.5 |
 | Green | The final experiment with custom SqueezeNet, Dropout 0.5 and Image Augmentation |
 
+
 ![tensorboard_2](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/lenet_squeeze_tb.png "Tensorboard SqueezeNet")
 
 
+
+## Part 3
+#### Evaluate the Test-Set 
+---
+
+After having finished all tweaking I run the test-set. These are my results:
+
+| **Dataset** | **Accuracy** |
+| :-----: | :------: |
+| **Validation** | **99.71 %** |
+| **Test** | **98.53 %** | 
+
+
+
+##### Correct predicted images of the test-set but lowest probability
+
+![low_prob_testset](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/low_prob_testset.png "Low probability on testset")
+
+
+##### Some of the mis-classifications of the test-set
+
+![wrong_testset](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/incorrect_test.png "failures on testset")
+
+Most of the misclassifications are blurred or occluded images of traffic signs, but there are also some clearly readable images (limit 60 km/h). Maybe the structured background misled the classifier. More data augmentation could help to tackle this problem.
+
+
+
+  * Evaluate completely new images
+  * Reflection
