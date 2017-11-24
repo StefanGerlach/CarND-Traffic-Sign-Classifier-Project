@@ -256,6 +256,24 @@ After having finished all tweaking I run the test-set. These are my results:
 Most of the misclassifications are blurred or occluded images of traffic signs, but there are also some clearly readable images (limit 60 km/h). Maybe the structured background misled the classifier. More data augmentation could help to tackle this problem.
 
 
+#### Evaluate completely new images
+---
 
-  * Evaluate completely new images
+I did take some new images around Lübeck, Germany with my camera and cropped them to the size of 32x32 pixels. I selected 6 clearly readable images and 6 with bad quality. So my expectation was an around 50 % accuracy of the system. To generate a new dataset, I used my function create_dataset(). Then I could run the evaluation. 
+
+I achieved 8/12 correct classifications. Here are the correct predicted images:
+
+![correct_customset](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/correct_custom.png "Correct predicted custom images")
+
+For the incorrect predictions I want to display these images in detail with their specific probability after softmax:
+
+![incorrect_custom_1](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/detail_1.png "1 incorrect custom images")
+
+![incorrect_custom_2](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/detail_5.png "2 incorrect custom images")
+
+![incorrect_custom_3](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/detail_7.png "3 incorrect custom images")
+
+![incorrect_custom_4](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/detail_8.png "4 incorrect custom images")
+
+
   * Reflection
