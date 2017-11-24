@@ -40,7 +40,7 @@ I want to describe my directory structure first, to give any reader a short over
 | **packages\tf_models.py** | A wrapper/template for my tensorflow models |
 | **packages\tf_train_utils.py** | Here live the loss functions, optimizer definitions, batch generator, class frequency equalizers, data augmenter and image preprocessors |
 | **train_evaluate_trafficsign_clsf.py** | Here I definied my ModelTrainer class and do actual training, visualization and evaluation |
-| **Traffic_Sign_Classifier.ipynb** | Un this notebook I collect all my code in one file for better overview of code and the outputs I generated |
+| **Traffic_Sign_Classifier.ipynb** | In this notebook I collect all my code in one file for better overview of code and the outputs I generated |
 | **Traffic_Sign_Classifier.html** | The notebook as html |
   
   
