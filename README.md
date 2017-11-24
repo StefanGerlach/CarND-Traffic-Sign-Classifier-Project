@@ -161,9 +161,15 @@ When all of these functions have executed, I take a look into Tensorboard and re
 | Optimizer | Adam (RMS with momentum) |
 | Batch Size | 128 |
 | Epochs | 50 |
-| Kernel Regularization | 1e-2 |
+| Kernel Regularization | 1e-2 | 
 | Dropout (chance to drop) | 0.25 - 0.5 |
 | Loss Function | softmax cross entropy with logits |
+
+I decided for Adam because it has not much parameters to adjust but the base learning rate. It is very adaptive, but nevertheless I expect good results with SGD(lr = 1e-4, momentum = 0.9, + learning rate decay), too. 
+
+The Kernel Regularization factor of 1e-2 is very high because I want the network not to overfit on this small dataset and have the convolutional weights sparse.
+
+Dropout serves as method for regularization. The count of epochs ( 50 ) is chosen empirically.
 
 
 #### Tweaking LeNet
