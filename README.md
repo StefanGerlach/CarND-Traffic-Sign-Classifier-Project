@@ -34,12 +34,14 @@ In this writeup I want to explain my approach of a traffic sign classifier based
 ## Directory Overview
 I want to describe my directory structure first, to give any reader a short overview what to find in my fork of the Udacity-Traffic-Sign-Classifier-Project repository.
 
-  * **packages\dataset_utils.py** this is my collection of dataset utilities
-  * **packages\tf_models.py** a wrapper/template for my tensorflow models
-  * **packages\tf_train_utils.py** here live the loss functions, optimizer definitions, batch generator, class frequency equalizers, data augmenter and image preprocessors
-  * **train_evaluate_trafficsign_clsf.py** - here I definied my ModelTrainer class and do actual training, visualization and evaluation
-  * **Traffic_Sign_Classifier.ipynb** in this notebook I collect all my code in one file for better overview of code and the outputs I generated
-  * **Traffic_Sign_Classifier.html** the notebook as html
+| File | Description |
+| ---- | ----------- |
+| **packages\dataset_utils.py** | This is my collection of dataset utilities |
+| **packages\tf_models.py** | A wrapper/template for my tensorflow models |
+| **packages\tf_train_utils.py** | Here live the loss functions, optimizer definitions, batch generator, class frequency equalizers, data augmenter and image preprocessors |
+| **train_evaluate_trafficsign_clsf.py** | Here I definied my ModelTrainer class and do actual training, visualization and evaluation |
+| **Traffic_Sign_Classifier.ipynb** | Un this notebook I collect all my code in one file for better overview of code and the outputs I generated |
+| **Traffic_Sign_Classifier.html** | The notebook as html |
   
   
 
