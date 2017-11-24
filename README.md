@@ -118,9 +118,11 @@ To visualize, how aggressive the augmentation is, I use a visualization function
 ---
 To monitor the training process I use tensorboard, which comes with the tensorflow-package. This extremely handy tool displays all information I need for this small project in the browser. To create statistics for tensorboard, a summary writer is instantiated and gets a scalar summary operation for the training loss, training accuracy, validation loss and validation accuracy. The Tensowflow-Graph is automatically shown in tensorboard!
 
-For saving my checkpoints I encapsulated the tensorflow.train.saver in my TrainSaver class. This class saves a new checkpoint if the validation loss decreases with the naming convention <logdir>checkpt-<val_loss>-<epoch>.
+For saving my checkpoints I encapsulated the tensorflow.train.saver in my TrainSaver class. This class saves a new checkpoint if the validation loss decreases with the naming convention < logdir >checkpt-< val_loss >-< epoch >.
  
- 
+![tensorboard_0](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/tensorboard_summaries.png "Tensorboard")
+
+
 #### Testing LeNet as a baseline
 ---
 
@@ -150,3 +152,23 @@ After instantiation of the ModelTrainer with the directories of the datasets (tr
   * fit()
   * evaluation_run()
 
+
+When all of these functions have executed, I take a look into Tensorboard and reflect how well the model was trained during this process. Most of the time I used these hyperparameters and settings:
+
+| Parameter | Value |
+| :-----: | :---------------: |
+| Base Learning Rate | 1e-3 |
+| Optimizer | Adam (RMS with momentum) |
+| Batch Size | 128 |
+| Epochs | 50 |
+| Kernel Regularization | 1e-2 |
+| Dropout (chance to drop) | 0.25 - 0.5 |
+| Loss Function | softmax cross entropy with logits |
+
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.207.2059&rep=rep1&type=pdf
+
+##### First LeNet results
+
+The first results did look like in the next screenshot of Tensorboard. The baseline model (in blue) performed quite well - I readhed a validation accuracy of about 92,3 %. But when I had a look over the validation loss, there was a slight tendency of increasement / overfitting to the dataset. So I introduced a dropout of 0.25 (chance to drop) and observed, that the val_loss decreased even more and the val_acc reached 93,3 %!
+
+![tensorboard_1](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/lenet_baseline_tb.png "Tensorboard")
