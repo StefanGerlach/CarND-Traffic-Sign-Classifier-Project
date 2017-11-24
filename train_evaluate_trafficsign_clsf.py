@@ -533,16 +533,13 @@ custom_squeezenet = models.TfCustomSqueezeNet(input_shape=[None,
 trainer.set_model(custom_squeezenet)
 
 # Fit the model with the specified optimizer to the training set
-# trainer.fit(experiment_name='final_experiment')
+trainer.fit(experiment_name='final_experiment')
 
 # Evaluate on the validation set
-# trainer.evaluation_run(display_most_unsure=10, detailed_view=False)
+trainer.evaluation_run(display_most_unsure=10, detailed_view=False)
 
 # Get the last (best) Checkpoint filename
-#last_checkpoint = trainer.get_last_checkpoint_filename()
-
-last_checkpoint = 'logs/final_experiment/checkpt-0.0139639638592-39'
-
+last_checkpoint = trainer.get_last_checkpoint_filename()
 
 # Clear the Session Graph
 tf.reset_default_graph()
