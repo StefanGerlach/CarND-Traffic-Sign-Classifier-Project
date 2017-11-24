@@ -3,7 +3,7 @@
 
 Overview
 ---
-In this writeup I want to explain my approach of a traffic sign classifier based on deep learning architectures. During this project I am going to train and validate a model that is capable of classifying images of the [German Traffic Sign Dataset](http://benchmark.ini.rub.de/?section=gtsrb&subsection=dataset) and images from the traffic signs of Lübeck, Germany. 
+In this writeup I want to explain my approach of a traffic sign classifier based on deep learning architectures. During this project I am going to train and validate a model, that is capable of classifying images of the [German Traffic Sign Dataset](http://benchmark.ini.rub.de/?section=gtsrb&subsection=dataset) and images from the traffic signs of Lübeck, Germany. 
 
 ### Part 1
 #### At first I am going to cover the following points about the dataset and image processing:
@@ -48,7 +48,7 @@ I want to describe my directory structure first, to give any reader a short over
 ## Part 1
 #### Data Visualization
 ---
-First I analyzed the [German Traffic Sign Dataset](http://benchmark.ini.rub.de/?section=gtsrb&subsection=dataset) in basic matter: counting and displaying the classes and images. The splits are already done by Udacity and here are the statistics about the datasets:
+First I analyzed the [German Traffic Sign Dataset](http://benchmark.ini.rub.de/?section=gtsrb&subsection=dataset) in a basic matter: counting and displaying the classes and images. The splits are already done by Udacity and here are the statistics about the datasets:
 
 | Dataset | Number of samples |
 | :-----: | :---------------: |
@@ -56,7 +56,7 @@ First I analyzed the [German Traffic Sign Dataset](http://benchmark.ini.rub.de/?
 | Validation | 4410 |
 | Test | 12630 |
 
-There are 43 unique classes of traffic signs in this dataset. To have a visual impression of these 32x32 RGB images, I created a print function to display some samples of all/some classes. Here are some (upscaled and interpolated!) images of some classes:
+There are 43 unique classes of traffic signs in this dataset. To have a visual impression of these 32x32 RGB images, I created a print function to display some samples of all/some classes. Here are some (upscaled with interpolation!) images of some classes:
 
 ![animal_crossing](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/animal_crossing_example_images.PNG "Examples for animal crossing traffic signs")
 ![end_no_passing](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/end_of_no_passing_images_example.PNG "Examples for end of no passing traffic signs")
@@ -82,7 +82,7 @@ In order to enhance contrast I used the contrast limited histogram equalisation 
 
 #### Class distribution normalization
 ---
-What I additionally did was analyzing the distribution of class-occurences. I plotted a histogram of class occurences in the training-set:
+What I additionally did was analyzing the distribution of class occurences. I plotted a histogram of class occurences in the training-set:
 ![hist_train](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/hist_traindata.png "histogram of class occurences in trainset")
 
 To avoid bias in the classifier, I normalize the frequencies by random sampling images of a specific class and copying them into the set until I reach an equal count of images for each class. After that operation the histogram looks like this:
@@ -100,7 +100,7 @@ For the training process of the deep neural network I want to randomly select a 
 
 #### Image Augmentation
 ---
-To compensate the copies of the images in the training set and to give the dataset more variation for better network generalization and less overfitting, I apply image augmentation. To do this, I use the keras ImageGenerator to apply 
+To compensate the copies of the images in the training set and to give the dataset more variation for better network generalization and less overfitting, I apply image augmentation. To do this, I use the keras ImageGenerator to augment with: 
 
  * Image rotation in a range of -20 to +20 degrees
  * Image translation in a range of -10 to +10 %
@@ -108,7 +108,7 @@ To compensate the copies of the images in the training set and to give the datas
  * Intensity shift 
  * Image Shearing
 
-To visualize, how aggressive the augmentation is, I use a visualization function where the most left image is the original and all other images are slight variations of it:
+To visualize, how aggressive the augmentation is, I use a visualization function where the most left image is the original and all other images are variations of it:
 
 ![augment_1](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/augmentation_0.PNG "Testing image augmentation")
 ![augment_2](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/augmentation_1.PNG "Testing image augmentation")
@@ -128,7 +128,7 @@ For saving my checkpoints I encapsulated the tensorflow.train.saver in my TrainS
 #### Testing LeNet as a baseline
 ---
 
-**TFModel** is the class I created to have an easy interface for creating new deep learning model architectures. Here I wrote some functions that wrap tensorflow functions like conv2d, fc_layer or dropout. My wrapper functions feel like a bit like Keras, that inspired me in doing this. 
+**TFModel** is the class I created to have an easy interface for creating new deep learning model architectures. Here I wrote some functions that wrap tensorflow functions like conv2d, fc_layer or dropout.
 
 I took the LeNet architecture from the Udacity lab as a baseline.
 
@@ -177,7 +177,7 @@ Dropout serves as method for regularization. The count of epochs ( 50 ) is chose
 #### Tweaking LeNet
 ---
 
-The first results did look like in the next screenshot of Tensorboard. The baseline model (in blue) performed quite well - I readhed a validation accuracy of about 92,3 %. But when I had a look over the validation loss, there was a slight tendency of increasement / overfitting to the dataset. So I introduced a dropout of 0.25 (chance to drop) and observed, that the val_loss decreased even more and the val_acc reached 93,3 %!
+The first results did look like in the next screenshot of Tensorboard. The baseline model (in blue) performed quite well - I reached a validation accuracy of about 92,3 %. But when I had a look over the validation loss, there was a slight tendency of increasement / overfitting to the dataset. So I introduced a dropout of 0.25 (chance to drop) and observed, that the val_loss decreased even more and the val_acc reached 93,3 %!
 
 ![tensorboard_1](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/lenet_baseline_tb.png "Tensorboard")
 
@@ -226,11 +226,12 @@ My first experiments dramatically failed with my custom SqueezeNet. And this is 
 
 ##### Experiments
 ---
+The following table and Tensorboard screenshot describes my main and most successfull experiments.
 
 | Curve color | Experiment Description |
 | :----- | :--------------- |
 | Blue | LeNet Baseline |
-| Red | tweaked LeNet |
+| Red | Tweaked LeNet |
 | Light Blue | The first version of custom SqueezeNet with Dropout at 0.5 |
 | Green | The final experiment with custom SqueezeNet, Dropout 0.5 and Image Augmentation |
 
@@ -261,7 +262,7 @@ After having finished all tweaking I run the test-set. These are my results:
 
 ![wrong_testset](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/incorrect_test.png "failures on testset")
 
-Most of the misclassifications are blurred or occluded images of traffic signs, but there are also some clearly readable images (limit 60 km/h). Maybe the structured background misled the classifier. More data augmentation could help to tackle this problem.
+Most of the misclassifications are blurred or overlapped images of traffic signs, but there are also some clearly readable images (limit 60 km/h). Maybe the structured background misled the classifier. More data augmentation could help to tackle this problem.
 
 
 #### Evaluate completely new images
@@ -288,7 +289,7 @@ For the incorrect predictions I want to display these images in detail with thei
 #### Reflection
 ---
 
-This is an interesting project that has a lot of potential. Further tweaking the model, like making it deeper with more layers or more kernels with additional data augmentation methods and regularization methods to not let the network overfit on this small dataset could get the final percentages on this dataset. 
+This is an interesting project that has a lot of potential. Further tweaking the model, like making it deeper with more layers or more kernels with additional data augmentation and regularization methods to not let the network overfit on this small dataset could get the final percentages on this dataset. 
 
 But: this is a quite small dataset! Transfer learning could help to use a pre-trained network and finetune on this tiny dataset. Or even some other dataset (if available) could be used to extend the amount of training images.
 
