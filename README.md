@@ -276,4 +276,15 @@ For the incorrect predictions I want to display these images in detail with thei
 ![incorrect_custom_4](https://github.com/StefanGerlach/CarND-Traffic-Sign-Classifier-Project/blob/master/images/detail_8.png "4 incorrect custom images")
 
 
-  * Reflection
+
+#### Reflection
+---
+
+This is an interesting project that has a lot of potential. Further tweaking the model, like making it deeper with more layers or more kernels with additional data augmentation methods and regularization methods to not let the network overfit on this small dataset could get the final percentages on this dataset. 
+
+But: this is a quite small dataset! Transfer learning could help to use a pre-trained network and finetune on this tiny dataset. Or even some other dataset (if available) could be used to extend the amount of training images.
+
+When looking forward, the network could even be translated in a fully convolutional network to find the traffic signs in a larger image. The current network only works on patches where the traffic sign **acutally is**. The Tensorflow-API allows flexible construction of deep learning models, so this step wouldn't even take a lot of work.
+
+
+Looking forward to the next project of this Nanodegree.
